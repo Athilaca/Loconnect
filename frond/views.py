@@ -44,17 +44,21 @@ class SendOTPView(APIView):
 
 class VerifyOTPView(APIView):
     def post(self, request):
+        phone_number = request.data.get('phone_number')
         entered_otp = request.data.get('otp')
         try:
-            user_profile = UserProfile.objects.get(otp=entered_otp)
-            if user_profile.otp == entered_otp:
-               
+            user_profile = UserProfile.objects.get(phone_number=phone_number)
+            stored_otp = str(user_profile.otp).strip()
+            entered_otp = str(entered_otp).strip() 
+            print(stored_otp,entered_otp)
+
+            if stored_otp == entered_otp:
+
                 user_profile.otp = None
                 user_profile.save()
-                refresh = RefreshToken.for_user(user_profile.user)
+                refresh = RefreshToken.for_user(user_profile)
                 access_token = str(refresh.access_token)
                 
-               
                 serializer = UserProfileSerializer(user_profile)
                 return Response({'token': access_token, 'user': serializer.data}, status=status.HTTP_200_OK)
                 
